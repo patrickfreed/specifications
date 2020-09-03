@@ -168,19 +168,19 @@ Connection Pool Members
 Connection
 ----------
 
-A driver-defined wrapper around a single TCP connection to an Endpoint. A `Connection`_ has the following properties:
+A driver-defined wrapper around a single TCP/IP connection to an Endpoint. A Connection has the following properties:
 
--  **Single Endpoint:** A `Connection`_ MUST be associated with a single Endpoint. A `Connection`_ MUST NOT be associated with multiple Endpoints.
--  **Single Lifetime:** A `Connection`_ MUST NOT be used after it is closed.
--  **Single Owner:** A `Connection`_ MUST belong to exactly one Pool, and MUST NOT be shared across multiple pools
--  **Single Track:** A `Connection`_ MUST limit itself to one request / response at a time. A `Connection`_ MUST NOT multiplex/pipeline requests to an Endpoint.
--  **Monotonically Increasing ID:** A `Connection`_ MUST have an ID number associated with it. `Connection`_ IDs within a Pool MUST be assigned in order of creation, starting at 1 and increasing by 1 for each new Connection.
+-  **Single Endpoint:** A Connection MUST be associated with a single Endpoint. A Connection MUST NOT be associated with multiple Endpoints.
+-  **Single Lifetime:** A Connection MUST NOT be used after it is closed.
+-  **Single Owner:** A Connection MUST belong to exactly one Pool, and MUST NOT be shared across multiple pools
+-  **Single Track:** A Connection MUST limit itself to one request / response at a time. A Connection MUST NOT multiplex/pipeline requests to an Endpoint.
+-  **Monotonically Increasing ID:** A Connection MUST have an ID number associated with it. Connection IDs within a Pool MUST be assigned in order of creation, starting at 1 and increasing by 1 for each new Connection.
 -  **Valid Connection:** A connection MUST NOT be checked out of the pool until it has successfully and fully completed a MongoDB Handshake and Authentication as specified in the `Handshake <https://github.com/mongodb/specifications/blob/master/source/mongodb-handshake/handshake.rst>`__, `OP_COMPRESSED <https://github.com/mongodb/specifications/blob/master/source/compression/OP_COMPRESSED.rst>`__, and `Authentication <https://github.com/mongodb/specifications/blob/master/source/auth/auth.rst>`__ specifications.
--  **Perishable**: it is possible for a `Connection`_ to become **Perished**. A `Connection`_ is considered perished if any of the following are true:
+-  **Perishable**: it is possible for a connection to become **Perished**. A connection is considered perished if any of the following are true:
 
-   - **Stale:** The `Connection`_ 's generation does not match the generation of the parent pool
-   - **Idle:** The `Connection`_ is currently "available" (as defined below) and has been for longer than **maxIdleTimeMS**.
-   - **Errored:** The `Connection`_ has experienced an error that indicates it is no longer recommended for use. Examples include, but are not limited to:
+   -  **Stale:** The connection's generation does not match the generation of the parent pool
+   -  **Idle:** The connection is currently available and readyToUse, and has been for longer than **maxIdleTimeMS**.
+   -  **Errored:** The connection has experienced an error that indicates the connection is no longer recommended for use. Examples include, but are not limited to:
 
       -  Network Error
       -  Network Timeout
