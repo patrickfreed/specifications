@@ -168,8 +168,7 @@ Connection Pool Members
 Connection
 ----------
 
-A driver-defined wrapper around a single TCP connection to an
-Endpoint. A `Connection <#connection>`_ has the following properties:
+A driver-defined wrapper around a single TCP connection to an Endpoint. A `Connection <#connection>`_ has the following properties:
 
 -  **Single Endpoint:** A `Connection <#connection>`_ MUST be associated with a single Endpoint. A `Connection <#connection>`_ MUST NOT be associated with multiple Endpoints.
 -  **Single Lifetime:** A `Connection <#connection>`_ MUST NOT be used after it is closed.
