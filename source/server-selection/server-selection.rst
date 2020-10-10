@@ -823,10 +823,6 @@ as follows:
 
 8. Goto Step #2
 
-Load balancing algorithm
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-
 
 Single-threaded server selection
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1067,8 +1063,8 @@ load balancing algorithm. The steps are as follows:
 
 3. Otherwise, choose the server with the higher availableConnectionCount.
 
-See the `Connection Pool_` definition in CMAP for the definitions of
-availableConnectionCount and activeConnectionCount.
+See the `Connection Pool`_ definition in the CMAP specification for the
+definitions of availableConnectionCount and activeConnectionCount.
 
 
 Checking an Idle Socket After socketCheckIntervalMS
