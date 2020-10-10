@@ -811,8 +811,8 @@ as follows:
    selector.
 
 5. If there are any suitable servers, choose one from those within the latency
-   window according to the `Load balancing algorithm`_ and return it; otherwise,
-   continue to the next step
+   window according to `Selecting servers within the latency window`_ and return
+   it; otherwise, continue to the next step
 
 6. Request an immediate topology check, then block the server selection
    thread until the topology changes or until the server selection
@@ -826,21 +826,6 @@ as follows:
 Load balancing algorithm
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-The load balancing algorithm used in server selection is a slight modification
-to the `"Two Random Choices with Min Connections" <https://www.nginx.com/blog/nginx-power-of-two-choices-load-balancing-algorithm/>`_
-algorithm. The steps are as follows:
-
-1. Select two servers at random from the set of available servers in the latency
-   window
-
-2. If abs(server1.pool.activeConnectionCount -
-   server2.pool.activeConnectionCount) > 0.05*maxPoolSize, then choose the
-   server with the smaller activeConnectionCount.
-
-3. Otherwise, choose the server with the higher availableConnectionCount.
-
-See the `Connection Pool_` definition in CMAP for the definitions of
-availableConnectionCount and activeConnectionCount.
 
 
 Single-threaded server selection
@@ -888,9 +873,9 @@ as follows:
 7. Filter the suitable servers by calling the optional, application-provided
    server selector.
 
-8. If there are any suitable servers, choose one at random from those
-   within the latency window and return it; otherwise, mark the topology
-   stale and continue to step #8
+8. If there are any suitable servers, choose one from those within the latency
+   window according to `Selecting servers within the latency window`_ and return
+   it; otherwise, mark the topology stale and continue to step #8
 
 9. If `serverSelectionTryOnce`_ is true and the last scan time is newer than
    the selection start time, raise a `server selection error`_; otherwise,
@@ -1016,8 +1001,8 @@ server, but are passed through to mongos. See `Passing read preference to mongos
 
 For write operations, all servers of type Mongos are suitable.
 
-If more than one mongos is suitable, drivers MUST randomly select a suitable
-server within the latency window.
+If more than one mongos is suitable, drivers MUST select a suitable server
+within the latency window according to `Selecting servers within the latency window`_.
 
 Round Trip Times and the Latency Window
 ---------------------------------------
@@ -1052,8 +1037,8 @@ Selecting servers within the latency window
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Server selection results in a set of zero or more suitable servers.  If more
-than one server is suitable, a server MUST be selected randomly from among
-those within the latency window.
+than one server is suitable, a server MUST be selected from among those within
+the latency window.
 
 The ``localThresholdMS`` configuration parameter controls the size of the
 latency window used to select a suitable server.
@@ -1062,12 +1047,29 @@ The shortest average round trip time (RTT) from among suitable servers anchors
 one end of the latency window (``A``).  The other end is determined by adding
 ``localThresholdMS`` (``B = A + localThresholdMS``).
 
-A server MUST be selected randomly from among suitable servers that have an
-average RTT (``RTT``) within the latency window (i.e. ``A ≤ RTT ≤ B``).
+A server MUST be selected from among suitable servers that have an average RTT
+(``RTT``) within the latency window (i.e. ``A ≤ RTT ≤ B``). In other words, the
+suitable server with the shortest average RTT is **always** a possible choice.
+Other servers could be chosen if their average RTTs are no more than
+``localThresholdMS`` more than the shortest average RTT.
 
-In other words, the suitable server with the shortest average RTT is **always**
-a possible choice.  Other servers could be chosen if their average RTTs are no
-more than ``localThresholdMS`` more than the shortest average RTT.
+A server MUST be selected according to the following algorithm, which is a
+slight modification of the `"Power of Two Random Choices with Min Connections"
+<https://www.nginx.com/blog/nginx-power-of-two-choices-load-balancing-algorithm/>`_
+load balancing algorithm. The steps are as follows:
+
+1. Select two servers at random from the set of available servers in the latency
+   window
+
+2. If abs(server1.pool.activeConnectionCount -
+   server2.pool.activeConnectionCount) > 0.05*maxPoolSize, then choose the
+   server with the smaller activeConnectionCount.
+
+3. Otherwise, choose the server with the higher availableConnectionCount.
+
+See the `Connection Pool_` definition in CMAP for the definitions of
+availableConnectionCount and activeConnectionCount.
+
 
 Checking an Idle Socket After socketCheckIntervalMS
 ---------------------------------------------------
@@ -1317,7 +1319,18 @@ Pseudocode for `single-threaded server selection`_::
 
             if servers is not empty:
                 in_window = servers within the latency window
-                return random entry from in_window
+                server1, server2 = random two entries from in_window
+
+                diff = abs(server1.pool.active_connection_count - server2.pool.active_connection_count)
+                if diff > max(0.05 * max_pool_size, 1):
+                    selected = server in (server1, server2) with minimum active_connection_count
+
+                if server1.pool.available_connection_count >= server2.pool.available_connection_count:
+                    selected = server1
+                else:
+                    selected = server2
+
+                return selected
             else:
                 topologyDescription.stale = true
 
@@ -1449,18 +1462,6 @@ other time-related configuration options.
 However, given a choice between the two, ``localThreshold`` is a more general
 term.  For drivers, we add the ``MS`` suffix for clarity about units and
 consistency with other configuration options.
-
-Random selection within the latency window
-------------------------------------------
-
-When more than one server is judged to be suitable, the spec calls for random
-selection to ensure a fair distribution of work among servers within the
-latency window.
-
-It would be hard to ensure a fair round-robin approach given the potential for
-servers to come and go.  Making newly available servers either first or last
-could lead to unbalanced work.  Random selection has a better fairness
-guarantee and keeps the design simpler.
 
 The slaveOK wire protocol flag
 ------------------------------
@@ -1660,7 +1661,7 @@ Mongos HA has similar problems with pinning, in that one can wind up pinned
 to a high-latency mongos even if a lower-latency mongos later becomes
 available.
 
-Random selection within the latency window avoids this problem and makes server
+Selection within the latency window avoids this problem and makes server
 selection exactly analogous to having multiple suitable servers from a replica
 set.  This is easier to explain and implement.
 
@@ -1736,26 +1737,27 @@ The user's intent in specifying two tag sets was to fall back to the second set
 if needed, so we filter by maxStalenessSeconds first, then tag_sets, and select
 Node 2.
 
-Why was the load balancing algorithm changed?
----------------------------------------------
+Why change from pure random selection when selecting from within the latency window?
+------------------------------------------------------------------------------------
 
-When a node slows down, it begins to hold on to active connections for
-longer. Assuming constant or increased operation throughput, this means more
-connections will need to be opened against that node in orer to serve them,
-further increasing load and slowing down the node. This can lead to runaway
-connection creation scenarios that can cripple a deployment ("connnection
-storms"). As part of DRIVERS-781, the load balancing algorithm was to more
-evenly spread out the workload among suitable servers and prevent any single
-node from being overloaded. The new algorithm achieves this by routing
-operations away from such servers until their load has decreased, reducing
-incoming connections and operations to those nodes and potentially preventing
-connection storms.
+When a node slows down, pooled connections against will remain checked
+out for longer periods of time due to operations taking longer to complete
+server-side. Assuming at least constant incoming operation load, more
+connections will need to be opened against the node to service new operations,
+further straining it and slowing it down. This can lead to runaway connection
+creation scenarios that can cripple a deployment ("connnection storms"). As part
+of DRIVERS-781, the load balancing algorithm was changed to more evenly spread
+out the workload among suitable servers to prevent any single node from being
+overloaded. The new algorithm achieves this by routing operations to servers
+with fewer active connections, thereby reducing new operations and connection
+creations against nodes that are busier. The previous random selection mechanism
+did not take load into account and could assign work to nodes that were under
+too much stress already.
 
 As an added benefit, the new algorithm gives preference to nodes that have
 recently been discovered and are thus are more likely to be alive (e.g. during a
-rolling restart). The "random two choices" portion of the algorithm ensures new
-servers aren't overly preferred however, preventing a "thundering herd"
-situation.
+rolling restart). The narrowing to two random choices first ensures new servers
+aren't overly preferred however, preventing a "thundering herd" situation.
 
 References
 ==========
