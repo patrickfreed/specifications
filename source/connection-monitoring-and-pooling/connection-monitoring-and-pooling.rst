@@ -607,12 +607,13 @@ Otherwise, the `Connection <#connection>`_ is marked as available.
 Determining if a Connection is "perished"
 -----------------------------------------
 
-Before checking out or checking in a `Connection`_, the pool MUST ensure the
-`Connection`_ is not "perished". To do so, it MUST verify it is none of the following:
+Before checking a `Connection`_ in or out, the pool MUST
+ensure the `Connection`_ is not "perished". A `Connection`_ is
+considered "perished" if it is at least one of the following:
 
 -  **Stale:** The `Connection`_ 's generation does not match the generation of the parent pool
--  **Idle:** The `Connection`_ is currently "available" (as defined below) and has been for longer than **maxIdleTimeMS**.
--  **Errored:** The `Connection`_ has experienced an error that indicates it is no longer recommended for use. To determine if a `Connection`_ is in such a state, the pool MUST check if it is “live” by using poll(), select(), or similar functionality available in the language’s networking library. This check MUST NOT block. This can be achieved by passing a timeout of 0 to poll(), for example. Examples causes of such a state include, but are not limited to:
+-  **Idle:** The `Connection`_ is currently "available" and has been for longer than **maxIdleTimeMS**.
+-  **Errored:** The `Connection`_ has experienced an error that indicates it is no longer recommended for use. To determine if a `Connection`_ is in such a state, the pool MUST check if it is “live” by using poll(), select(), or similar functionality available in the language’s networking library. This check MUST NOT block. This can be achieved by passing a timeout of 0 to poll(), for example. Examples of how a `Connection`_ might enter such a state include, but are not limited to:
 
     -  Network Error
     -  Network Timeout
