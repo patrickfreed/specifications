@@ -10,7 +10,7 @@ Server Selection
 :Status: Accepted
 :Type: Standards
 :Last Modified: 2020-03-17
-:Version: 1.11.0
+:Version: 1.12.0
 
 .. contents::
 
@@ -1821,6 +1821,9 @@ selection rules.
 2019-06-07: Clarify language for aggregate and mapReduce commands that write
 
 2020-03-17: Specify read preferences with support for server hedged reads
+
+2020-10-10: Consider connection pool health when selecting servers within the
+latency window.
 
 .. [#] mongos 3.4 refuses to connect to mongods with maxWireVersion < 5,
    so it does no additional wire version checks related to maxStalenessSeconds.
