@@ -810,8 +810,9 @@ as follows:
 4. Filter the suitable servers by calling the optional, application-provided server
    selector.
 
-5. If there are any suitable servers, choose one at random from those
-   within the latency window and return it; otherwise, continue to the next step
+5. If there are any suitable servers, choose one from those within the latency
+   window according to the `Load balancing algorithm`_ and return it; otherwise,
+   continue to the next step
 
 6. Request an immediate topology check, then block the server selection
    thread until the topology changes or until the server selection
@@ -821,6 +822,26 @@ as follows:
    the selection start time, raise a `server selection error`_
 
 8. Goto Step #2
+
+Load balancing algorithm
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+The load balancing algorithm used in server selection is a slight modification
+to the `"Two Random Choices with Min Connections" <https://www.nginx.com/blog/nginx-power-of-two-choices-load-balancing-algorithm/>`_
+algorithm. The steps are as follows:
+
+1. Select two servers at random from the set of available servers in the latency
+   window
+
+2. If abs(server1.pool.activeConnectionCount -
+   server2.pool.activeConnectionCount) > 0.05*maxPoolSize, then choose the
+   server with the smaller activeConnectionCount.
+
+3. Otherwise, choose the server with the higher availableConnectionCount.
+
+See the `Connection Pool_` definition in CMAP for the definitions of
+availableConnectionCount and activeConnectionCount.
+
 
 Single-threaded server selection
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1211,7 +1232,17 @@ Pseudocode for `multi-threaded or asynchronous server selection`_::
 
             if servers is not empty:
                 in_window = servers within the latency window
-                selected = random entry from in_window
+                server1, server2 = random two entries from in_window
+
+                diff = abs(server1.pool.active_connection_count - server2.pool.active_connection_count)
+                if diff > max(0.05 * max_pool_size, 1):
+                    selected = server in (server1, server2) with minimum active_connection_count
+
+                if server1.pool.available_connection_count >= server2.pool.available_connection_count:
+                    selected = server1
+                else:
+                    selected = server2
+
                 client.lock.release()
                 return selected
 
@@ -1705,17 +1736,41 @@ The user's intent in specifying two tag sets was to fall back to the second set
 if needed, so we filter by maxStalenessSeconds first, then tag_sets, and select
 Node 2.
 
+Why was the load balancing algorithm changed?
+---------------------------------------------
+
+When a node slows down, it begins to hold on to active connections for
+longer. Assuming constant or increased operation throughput, this means more
+connections will need to be opened against that node in orer to serve them,
+further increasing load and slowing down the node. This can lead to runaway
+connection creation scenarios that can cripple a deployment ("connnection
+storms"). As part of DRIVERS-781, the load balancing algorithm was to more
+evenly spread out the workload among suitable servers and prevent any single
+node from being overloaded. The new algorithm achieves this by routing
+operations away from such servers until their load has decreased, reducing
+incoming connections and operations to those nodes and potentially preventing
+connection storms.
+
+As an added benefit, the new algorithm gives preference to nodes that have
+recently been discovered and are thus are more likely to be alive (e.g. during a
+rolling restart). The "random two choices" portion of the algorithm ensures new
+servers aren't overly preferred however, preventing a "thundering herd"
+situation.
+
 References
 ==========
 
 - `Server Discovery and Monitoring`_ specification
 - `Driver Authentication`_ specification
+- `Connection Monitoring and Pooling`_ specificaiton
 
 .. _Server Discovery and Monitoring: https://github.com/mongodb/specifications/tree/master/source/server-discovery-and-monitoring
 .. _heartbeatFrequencyMS: https://github.com/mongodb/specifications/blob/master/source/server-discovery-and-monitoring/server-discovery-and-monitoring.rst#heartbeatfrequencyms
 .. _Max Staleness: https://github.com/mongodb/specifications/tree/master/source/max-staleness
 .. _idleWritePeriodMS: https://github.com/mongodb/specifications/blob/master/source/max-staleness/max-staleness.rst#idlewriteperiodms
 .. _Driver Authentication: https://github.com/mongodb/specifications/blob/master/source/auth
+.. _Connection Pool: https://github.com/mongodb/specifications/blob/master/source/connection-monitoring-and-pooling/connection-monitoring-and-pooling.rst#connection-pool
+.. _Connection Monitoring and Pooling: https://github.com/mongodb/specifications/blob/master/source/connection-monitoring-and-pooling/connection-monitoring-and-pooling.rst#connection-pool
 
 Changes
 =======
