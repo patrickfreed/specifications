@@ -1057,11 +1057,10 @@ load balancing algorithm. The steps are as follows:
 1. Select two servers at random from the set of available servers in the latency
    window
 
-2. If abs(server1.pool.activeConnectionCount -
-   server2.pool.activeConnectionCount) > 0.05*maxPoolSize, then choose the
-   server with the smaller activeConnectionCount.
+2. If ``abs(server1.pool.activeConnectionCount - server2.pool.activeConnectionCount) > 0.05*maxPoolSize``,
+   then choose the server with the smaller ``activeConnectionCount``.
 
-3. Otherwise, choose the server with the higher availableConnectionCount.
+3. Otherwise, choose the server with the higher ``availableConnectionCount``.
 
 See the `Connection Pool`_ definition in the CMAP specification for the
 definitions of availableConnectionCount and activeConnectionCount.
