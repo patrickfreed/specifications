@@ -1736,8 +1736,8 @@ Node 2.
 Why change from pure random selection when selecting from within the latency window?
 ------------------------------------------------------------------------------------
 
-When a node slows down, pooled connections against will remain checked
-out for longer periods of time due to operations taking longer to complete
+When a node slows down, pooled connections to it will remain checked out for
+longer periods of time due to operations taking longer to complete
 server-side. Assuming at least constant incoming operation load, more
 connections will need to be opened against the node to service new operations,
 further straining it and slowing it down. This can lead to runaway connection
@@ -1745,10 +1745,10 @@ creation scenarios that can cripple a deployment ("connnection storms"). As part
 of DRIVERS-781, the load balancing algorithm was changed to more evenly spread
 out the workload among suitable servers to prevent any single node from being
 overloaded. The new algorithm achieves this by routing operations to servers
-with fewer active connections, thereby reducing new operations and connection
-creations against nodes that are busier. The previous random selection mechanism
-did not take load into account and could assign work to nodes that were under
-too much stress already.
+with fewer active connections, thereby reducing the number of new operations and
+connection creations routed towards nodes that are busier. The previous random
+selection mechanism did not take load into account and could assign work to
+nodes that were under too much stress already.
 
 As an added benefit, the new algorithm gives preference to nodes that have
 recently been discovered and are thus are more likely to be alive (e.g. during a
