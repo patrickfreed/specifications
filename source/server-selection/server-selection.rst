@@ -1058,7 +1058,7 @@ load balancing algorithm. The steps are as follows:
    window. If there is only 1 server in the latency window, just return that server
    without proceeding to the next steps.
 
-2. If ``abs(server1.pool.activeConnectionCount - server2.pool.activeConnectionCount) > 0.05*maxPoolSize``,
+2. If ``abs(server1.pool.activeConnectionCount - server2.pool.activeConnectionCount) > max(0.05*maxPoolSize, 1)``,
    then choose the server with the smaller ``activeConnectionCount``.
 
 3. Otherwise, choose the server with the higher ``availableConnectionCount``.
