@@ -1055,7 +1055,8 @@ slight modification of the `"Power of Two Random Choices with Min Connections"
 load balancing algorithm. The steps are as follows:
 
 1. Select two servers at random from the set of available servers in the latency
-   window
+   window. If there is only 1 server in the latency window, just return that server
+   without proceeding to the next steps.
 
 2. If ``abs(server1.pool.activeConnectionCount - server2.pool.activeConnectionCount) > 0.05*maxPoolSize``,
    then choose the server with the smaller ``activeConnectionCount``.
