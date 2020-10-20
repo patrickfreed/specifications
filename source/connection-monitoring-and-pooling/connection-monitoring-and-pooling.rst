@@ -58,7 +58,7 @@ Active Connection
 
 An "active Connection" is a `Connection`_ that is either pending or in use. The
 server selection algorithm takes the number of active connections a particular
-server has into account when deciding among suitable choices.
+pool has into account when deciding among suitable choices.
 
 Behavioral Description
 ======================
