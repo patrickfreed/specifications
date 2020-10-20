@@ -1766,8 +1766,8 @@ References
 .. _Max Staleness: https://github.com/mongodb/specifications/tree/master/source/max-staleness
 .. _idleWritePeriodMS: https://github.com/mongodb/specifications/blob/master/source/max-staleness/max-staleness.rst#idlewriteperiodms
 .. _Driver Authentication: https://github.com/mongodb/specifications/blob/master/source/auth
-.. _Connection Pool: https://github.com/mongodb/specifications/blob/master/source/connection-monitoring-and-pooling/connection-monitoring-and-pooling.rst#connection-pool
-.. _Connection Monitoring and Pooling: https://github.com/mongodb/specifications/blob/master/source/connection-monitoring-and-pooling/connection-monitoring-and-pooling.rst#connection-pool
+.. _Connection Pool: /source/connection-monitoring-and-pooling/connection-monitoring-and-pooling.rst#connection-pool
+.. _Connection Monitoring and Pooling: /source/connection-monitoring-and-pooling/connection-monitoring-and-pooling.rst
 
 Changes
 =======
