@@ -621,7 +621,7 @@ considered "perished" if it is at least one of the following:
    -  Driver-Side Timeout
    -  Wire-Protocol Error
 
--  **Dead:** The `Connection`_ is currently "available" but has become unusable (e.g. due to server closing other end or a network disruption). To determine if a `Connection`_ is in such a state, the pool MUST check if it is “live” by using poll(), select(), or similar functionality available in the language’s networking library. This check MUST NOT block. This can be achieved by passing a timeout of 0 to poll(), for example.
+-  **Dead:** The `Connection`_ is currently "available" but has become unusable (e.g. due to the endpoint closing the other end of the underlying TCP socket or a network disruption). To determine if a `Connection`_ is in such a state, the pool MUST check if it is “live” by using poll(), select(), or similar functionality available in the language’s networking library. This check MUST NOT block. This can be achieved by passing a timeout of 0 to poll(), for example.
 
 Clearing a Connection Pool
 --------------------------
