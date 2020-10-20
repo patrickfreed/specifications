@@ -1066,6 +1066,24 @@ load balancing algorithm. The steps are as follows:
 See the `Connection Pool`_ definition in the CMAP specification for the
 definitions of availableConnectionCount and activeConnectionCount.
 
+In psuedocode::
+
+    def selectServerWithinLatencyWindow(suitable_servers):
+        in_window = servers in suitable_servers within the latency window
+
+        if len(in_window) == 1:
+           return in_window[0]
+
+        server1, server2 = random two entries from in_window
+
+        diff = abs(server1.pool.active_connection_count - server2.pool.active_connection_count)
+        if diff > max(0.05 * max_pool_size, 1):
+            return server in (server1, server2) with minimum active_connection_count
+        elif server1.pool.available_connection_count >= server2.pool.available_connection_count:
+            return server1
+        else:
+            return server2
+
 
 Checking an Idle Socket After socketCheckIntervalMS
 ---------------------------------------------------
@@ -1197,7 +1215,9 @@ Multi-threaded server selection implementation
 The following example uses a single lock for clarity.  Drivers are free to
 implement whatever concurrency model best suits their design.
 
-Pseudocode for `multi-threaded or asynchronous server selection`_::
+The following is pseudocode for `multi-threaded or asynchronous server
+selection`_. The psuedocode for the ``selectServerWithinLatencyWindow`` function is
+included in the `Selecting servers within the latency window`_ section above::
 
     def getServer(criteria):
         client.lock.acquire()
@@ -1229,18 +1249,7 @@ Pseudocode for `multi-threaded or asynchronous server selection`_::
                 servers = serverSelector(servers)
 
             if servers is not empty:
-                in_window = servers within the latency window
-                server1, server2 = random two entries from in_window
-
-                diff = abs(server1.pool.active_connection_count - server2.pool.active_connection_count)
-                if diff > max(0.05 * max_pool_size, 1):
-                    selected = server in (server1, server2) with minimum active_connection_count
-
-                if server1.pool.available_connection_count >= server2.pool.available_connection_count:
-                    selected = server1
-                else:
-                    selected = server2
-
+                selected = selectServerWithinLatencyWindow(servers)
                 client.lock.release()
                 return selected
 
@@ -1261,7 +1270,9 @@ Pseudocode for `multi-threaded or asynchronous server selection`_::
 Single-threaded server selection implementation
 -----------------------------------------------
 
-Pseudocode for `single-threaded server selection`_::
+The following is pseudocode for `single-threaded server selection`_. The
+psuedocode for the ``selectServerWithinLatencyWindow`` function is included in the
+`Selecting servers within the latency window`_ section above::
 
     def getServer(criteria):
         startTime = gettime()
@@ -1314,19 +1325,7 @@ Pseudocode for `single-threaded server selection`_::
                 servers = serverSelector(servers)
 
             if servers is not empty:
-                in_window = servers within the latency window
-                server1, server2 = random two entries from in_window
-
-                diff = abs(server1.pool.active_connection_count - server2.pool.active_connection_count)
-                if diff > max(0.05 * max_pool_size, 1):
-                    selected = server in (server1, server2) with minimum active_connection_count
-
-                if server1.pool.available_connection_count >= server2.pool.available_connection_count:
-                    selected = server1
-                else:
-                    selected = server2
-
-                return selected
+                return selectServerWithinLatencyWindow(servers)
             else:
                 topologyDescription.stale = true
 
