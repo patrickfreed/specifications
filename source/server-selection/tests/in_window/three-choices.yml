@@ -1,0 +1,25 @@
+description: Server with least connections and most available connections selected most
+in_window:
+    # chosen when randomly selected with c due to
+    # lower active count. loses tie to b due to lower
+    # available connection count
+    - id: a
+      active_connection_count: 3
+      available_connection_count: 0
+
+    # should be selected whenever randomly chosen due to
+    # higher available connection count
+    - id: b
+      active_connection_count: 6
+      available_connection_count: 1
+
+    # should never be selected due to high active count
+    - id: c
+      active_connection_count: 20,
+      available_connection_count: 0
+
+max_pool_size: 100
+expected_frequencies:
+    a: 0.66
+    b: 0.33
+    c: 0
