@@ -71,6 +71,8 @@ Selection Within Latency Window Tests
 
 Each YAML file for these tests has the following format:
 
+- ``topology_description``: the state of a mocked cluster
+
 - ``in_window``: array of servers in the latency window that the selected server
   is to be chosen from. Each element will have all of the following fields:
 
@@ -97,4 +99,6 @@ contained in ``expected_frequencies`` for that server. If the expected frequency
 for a given server is 1 or 0, then the observed frequency MUST be exactly equal
 to the expected one.
 
-Mocking may be required to implement these tests.
+Mocking may be required to implement these tests. A mocked topology description
+is included in each file for drivers that require a full description to
+implement these tests.

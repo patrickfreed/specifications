@@ -1,5 +1,25 @@
 {
   "description": "Server with least connections and most available connections selected most",
+  "topology_description": {
+    "type": "Sharded",
+    "servers": [
+      {
+        "address": "a:27017",
+        "avg_rtt_ms": 35,
+        "type": "Mongos"
+      },
+      {
+        "address": "b:27017",
+        "avg_rtt_ms": 35,
+        "type": "Mongos"
+      },
+      {
+        "address": "c:27017",
+        "avg_rtt_ms": 35,
+        "type": "Mongos"
+      }
+    ]
+  },
   "in_window": [
     {
       "address": "a:27017",
