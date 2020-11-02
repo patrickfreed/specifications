@@ -2,25 +2,25 @@
   "description": "Server with least connections and most available connections selected most",
   "in_window": [
     {
-      "id": "a",
+      "address": "a:27017",
       "active_connection_count": 3,
       "available_connection_count": 0
     },
     {
-      "id": "b",
+      "address": "b:27017",
       "active_connection_count": 6,
       "available_connection_count": 1
     },
     {
-      "id": "c",
+      "address": "c:27017",
       "active_connection_count": "20,",
       "available_connection_count": 0
     }
   ],
   "max_pool_size": 100,
   "expected_frequencies": {
-    "a": 0.66,
-    "b": 0.33,
-    "c": 0
+    "a:27017": 0.66,
+    "b:27017": 0.33,
+    "c:27017": 0
   }
 }

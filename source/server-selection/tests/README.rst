@@ -74,7 +74,7 @@ Each YAML file for these tests has the following format:
 - ``in_window``: array of servers in the latency window that the selected server
   is to be chosen from. Each element will have all of the following fields:
 
-  - ``id``: a unique string identifier for this server
+  - ``address``: a unique address identifying this server
 
   - ``active_connection_count``: the number of active connections this server
     currently has open
@@ -85,7 +85,7 @@ Each YAML file for these tests has the following format:
 - ``max_pool_size``: the maximum number of connections allowed in a server's
   connection pool.
 
-- ``expected_frequencies``: a document whose keys are the server ids from the
+- ``expected_frequencies``: a document whose keys are the server addresses from the
   ``in_window`` array and values are numbers in [0, 1] indicating the frequency
   at which the server should have been selected.
 
